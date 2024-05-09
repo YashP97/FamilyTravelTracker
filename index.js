@@ -22,36 +22,30 @@ let colour = "teal";
 let currentUserId = 1;
 let users = [{ id: 1, name: "Yash", color: "teal" }];
 
-async function getUser(hostid){    
-    console.log("host user = " + hostid);
+async function getUser(){    
     const result = await db.query("Select * from public.users");
     users = result.rows;  
     
-    users.forEach((user) => {
-        if(user.id === hostid){
-            colour = user.color;                    
+    users.forEach((user) => {        
+        if(user.id == currentUserId){
+            colour = user.color;                          
         }        
-    });    
+    });   
 }
 
-//JOIN public.users ON users.id = user_id 
-
-async function visitedCountries(host){    
-    console.log("host countries = " + host);
+async function visitedCountries(){    
     let countries = [];
 
-    //const result = await db.query("Select country_code from public.visited_countries where user_id=$1", [currentUserId]);
-    const result = await db.query("Select country_code from public.visited_countries JOIN public.users ON users.id = user_id where user_id=$1", [host]);
+    const result = await db.query("Select country_code from public.visited_countries JOIN public.users ON users.id = user_id where user_id=$1", [currentUserId]);
     result.rows.forEach((country) => {
         countries.push(country.country_code);      
     });   
     return countries;
 }
 
-app.get("/", async (req,res) => {
-    //console.log("currentidddd = " + currentUserId); 
-    const countries = await visitedCountries(currentUserId);    
-    await getUser(currentUserId);
+app.get("/", async (req,res) => {    
+    const countries = await visitedCountries();    
+    await getUser();
     res.render("index.ejs", {
         countries : countries,
         total : countries.length,
@@ -62,8 +56,7 @@ app.get("/", async (req,res) => {
 
 app.post("/user", async (req,res) => {
     if(req.body.add === "new") {
-        res.render("new.ejs");
-        // res.redirect("/new");
+        res.render("new.ejs");        
     } else {
         currentUserId = req.body.add;        
         res.redirect("/");  
